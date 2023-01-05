@@ -19,6 +19,17 @@ type Drawable struct {
 	VertexName string
 }
 
+func (node *Drawable) Name() string {
+	return node.VertexName
+}
+
+func (node *Drawable) DotNode(n string, opts *dag.DotOpts) *dag.DotNode {
+	return &dag.DotNode{
+		Name:  n,
+		Attrs: map[string]string{},
+	}
+}
+
 // type GraphVertex struct {
 // 	DotNodeTitle  string
 // 	DotNodeOpts   *dag.DotOpts
