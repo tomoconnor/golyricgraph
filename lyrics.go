@@ -4,9 +4,13 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/goccy/go-graphviz"
+	"github.com/goccy/go-graphviz/cgraph"
 )
 
 type Lyrics struct {
@@ -15,8 +19,8 @@ type Lyrics struct {
 	Lyrics     string         `json:"lyrics"`
 	LyricArray []string       `json:"lyric_array"`
 	WordMap    map[string]int `json:"word_map"`
-	// LyricGraph *dag.Graph     `json:"lyric_graph"`
-	// NodeMap    map[string]Drawable
+	LyricGraph *graphviz.Graphviz
+	NodeMap    map[string]*cgraph.Node
 }
 
 type LResponse struct {
@@ -32,13 +36,27 @@ type LResponse struct {
 	Lyrics        string `xml:"Lyric"`
 }
 
-func removeNewlines(s string) string {
+func TidyUpLyrics(s string) string {
 	f := strings.Replace(s, "\n", " ", -1)
+	f = strings.Replace(f, ",", "", -1)
+	f = strings.Replace(f, ".", "", -1)
+	f = strings.Replace(f, "!", "", -1)
+	f = strings.Replace(f, "?", "", -1)
+	f = strings.Replace(f, "(", "", -1)
+	f = strings.Replace(f, ")", "", -1)
+	f = strings.Replace(f, "[", "", -1)
+	f = strings.Replace(f, "]", "", -1)
+	f = strings.Replace(f, "{", "", -1)
+	f = strings.Replace(f, "}", "", -1)
+	f = strings.Replace(f, ":", "", -1)
+	f = strings.Replace(f, ";", "", -1)
+	f = strings.Replace(f, "-", "", -1)
+	f = strings.ToLower(f)
 	return f
 }
 
 func (l *Lyrics) GetLyricsAsArray() {
-	lyrics := removeNewlines(l.Lyrics)
+	lyrics := TidyUpLyrics(l.Lyrics)
 	lyrics_array := strings.Split(lyrics, " ")
 	l.LyricArray = lyrics_array
 }
@@ -49,10 +67,10 @@ func (l *Lyrics) GetWordMap() {
 		word_map[word]++
 	}
 	l.WordMap = word_map
-	// l.NodeMap = make(map[string]Drawable)
+	l.NodeMap = make(map[string]*cgraph.Node)
 }
 
-func (l *Lyrics) RetrieveLyrics() {
+func (l *Lyrics) RetrieveLyrics() error {
 
 	params := url.Values{}
 	params.Add("artist", l.Artist)
@@ -63,11 +81,13 @@ func (l *Lyrics) RetrieveLyrics() {
 	resp, err := http.Get(request_url)
 	if err != nil {
 		fmt.Println("Error: ", err)
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error: ", err)
+		return err
 	}
 	// parse xml response
 	var responseObject LResponse
@@ -77,9 +97,76 @@ func (l *Lyrics) RetrieveLyrics() {
 	l.Lyrics = responseObject.Lyrics
 	l.Artist = responseObject.Artist
 	l.Title = responseObject.Song
-
+	return nil
 }
 
-func (l *Lyrics) CreateLyricGraph() {}
+func (l *Lyrics) CreateLyricGraph(filename string) {
+	g := graphviz.New()
+	graph, err := g.Graph()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := graph.Close(); err != nil {
+			log.Fatal(err)
+		}
+		g.Close()
+	}()
+	// Create Start Node
+	startNode, err := graph.CreateNode("START")
+	if err != nil {
+		log.Fatal(err)
+	}
+	startNode.SetLabel("START")
 
-func (l *Lyrics) CreateLyricGraphDot(filename string) {}
+	// Create End Node
+	endNode, err := graph.CreateNode("END")
+	if err != nil {
+		log.Fatal(err)
+	}
+	endNode.SetLabel("END")
+
+	// create nodes
+	for word, count := range l.WordMap {
+		node, err := graph.CreateNode(word)
+		if err != nil {
+			log.Fatal(err)
+		}
+		node.SetLabel(fmt.Sprintf("%s (%d)", word, count))
+		l.NodeMap[word] = node
+	}
+
+	// create edges
+	for i := 0; i < len(l.LyricArray)-1; i++ {
+		from := l.NodeMap[l.LyricArray[i]]
+		to := l.NodeMap[l.LyricArray[i+1]]
+
+		_, err := graph.CreateEdge("", from, to)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// edge.SetLabel("1")
+
+	}
+	// join start node to first word
+	_, err = graph.CreateEdge("", startNode, l.NodeMap[l.LyricArray[0]])
+	if err != nil {
+		log.Fatal(err)
+	}
+	// join last word to end node
+	_, err = graph.CreateEdge("", l.NodeMap[l.LyricArray[len(l.LyricArray)-1]], endNode)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	l.LyricGraph = g
+	imageFileName := fmt.Sprintf("imagefiles/%s.png", filename)
+	if err := g.RenderFilename(graph, graphviz.PNG, imageFileName); err != nil {
+		log.Fatal(err)
+	}
+	dotFileName := fmt.Sprintf("dotfiles/%s.dot", filename)
+	if err := g.RenderFilename(graph, graphviz.XDOT, dotFileName); err != nil {
+		log.Fatal(err)
+	}
+
+}

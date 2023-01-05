@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  # web:
+  #   image: nginx:latest
+  #   ports:
+  #     - 80:80
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #   depends_on:
+  #     - app
+  # app:
+  #   image: node:latest
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: npm run dev
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - db
+  db:
+    image: postgres:latest
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_NAME}
