@@ -7,47 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	dag "github.com/hashicorp/terraform/dag"
 )
-
-type DrawableOrigin struct {
-	VertexName string
-}
-
-type Drawable struct {
-	VertexName string
-}
-
-func (node *Drawable) Name() string {
-	return node.VertexName
-}
-
-func (node *Drawable) DotNode(n string, opts *dag.DotOpts) *dag.DotNode {
-	return &dag.DotNode{
-		Name:  n,
-		Attrs: map[string]string{},
-	}
-}
-
-// type GraphVertex struct {
-// 	DotNodeTitle  string
-// 	DotNodeOpts   *dag.DotOpts
-// 	DotNodeReturn *dag.DotNode
-// }
-
-// func (v *GraphVertex) MakeDotNode(title string, opts *dag.DotOpts) *dag.DotNode {
-// 	v.DotNodeTitle = title
-// 	v.DotNodeOpts = opts
-// 	v.DotNodeReturn = &dag.DotNode{
-// 		Name: title,
-// 		// Attrs: map[string]string{
-// 		// 	"label": title,
-// 		// },
-// 	}
-
-// 	return v.DotNodeReturn
-// }
 
 type Lyrics struct {
 	Artist     string         `json:"artist"`
@@ -55,8 +15,8 @@ type Lyrics struct {
 	Lyrics     string         `json:"lyrics"`
 	LyricArray []string       `json:"lyric_array"`
 	WordMap    map[string]int `json:"word_map"`
-	LyricGraph *dag.Graph     `json:"lyric_graph"`
-	NodeMap    map[string]Drawable
+	// LyricGraph *dag.Graph     `json:"lyric_graph"`
+	// NodeMap    map[string]Drawable
 }
 
 type LResponse struct {
@@ -89,7 +49,7 @@ func (l *Lyrics) GetWordMap() {
 		word_map[word]++
 	}
 	l.WordMap = word_map
-	l.NodeMap = make(map[string]Drawable)
+	// l.NodeMap = make(map[string]Drawable)
 }
 
 func (l *Lyrics) RetrieveLyrics() {
@@ -120,49 +80,6 @@ func (l *Lyrics) RetrieveLyrics() {
 
 }
 
-func (l *Lyrics) CreateLyricGraph() {
-	g := dag.Graph{}
-	o := DrawableOrigin{VertexName: "Song Start"}
-	g.Add(&o)
+func (l *Lyrics) CreateLyricGraph() {}
 
-	for _, word := range l.LyricArray {
-		w := Drawable{VertexName: word}
-		// w := dag.DotNode{
-		// 	Name: word,
-		// }
-
-		g.Add(w)
-		l.NodeMap[word] = w
-	}
-	for i, word := range l.LyricArray {
-		if i < len(l.LyricArray)-1 {
-			a := l.NodeMap[word]
-			b := l.NodeMap[l.LyricArray[i+1]]
-			g.Connect(dag.BasicEdge(a, b))
-		}
-	}
-	g.Connect(dag.BasicEdge(&o, l.NodeMap[l.LyricArray[0]]))
-
-	// 		g.Connect(dag.BasicEdge(word, l.LyricArray[i+1]))
-	// 	}
-	// }
-	l.LyricGraph = &g
-}
-
-func (l *Lyrics) CreateLyricGraphDot(filename string) {
-	g := l.LyricGraph
-	dotOptions := dag.DotOpts{
-		Verbose:    false,
-		DrawCycles: false,
-		MaxDepth:   10,
-	}
-
-	dot := g.Dot(&dotOptions)
-	// fmt.Println(dot) // Meaningless fucking dot file
-	// output to file.
-	err := ioutil.WriteFile(filename, dot, 0644)
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-}
+func (l *Lyrics) CreateLyricGraphDot(filename string) {}
