@@ -31,7 +31,34 @@ func TestLyricArray(t *testing.T) {
 	}
 	// lyric.RetrieveLyrics()
 	expected := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
-	if reflect.DeepEqual(lyric.GetLyricsAsArray(), expected) {
-		t.Errorf("Lyrics were incorrect, got: %s, want: %s.", lyric.GetLyricsAsArray(), expected)
+	lyric.GetLyricsAsArray()
+	if reflect.DeepEqual(lyric.LyricArray, expected) {
+		t.Errorf("Lyrics were incorrect, got: %s, want: %s.", lyric.LyricArray, expected)
 	}
+}
+
+func TestWordMap(t *testing.T) {
+	lyric := Lyrics{
+		Lyrics: "A\nB\nC\nD\nE\nF\nG",
+	}
+	expected := map[string]int{"A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "G": 1}
+	lyric.GetLyricsAsArray()
+	lyric.GetWordMap()
+	if reflect.DeepEqual(lyric.WordMap, expected) {
+		t.Errorf("Lyrics were incorrect, got: %v, want: %v.", lyric.WordMap, expected)
+	}
+
+}
+
+func TestWordMapMultiple(t *testing.T) {
+	lyric := Lyrics{
+		Lyrics: "A\nB\nC\nD\nE\nF\nG\nA\nB\nC\nD",
+	}
+	expected := map[string]int{"A": 2, "B": 2, "C": 2, "D": 2, "E": 1, "F": 1, "G": 1}
+	lyric.GetLyricsAsArray()
+	lyric.GetWordMap()
+	if reflect.DeepEqual(lyric.WordMap, expected) {
+		t.Errorf("Lyrics were incorrect, got: %v, want: %v.", lyric.WordMap, expected)
+	}
+
 }
