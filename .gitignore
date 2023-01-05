@@ -31,3 +31,4 @@ go.work
 dev.sh
 .env
 lyricgraph
+lyricgraph-server
