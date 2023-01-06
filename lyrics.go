@@ -51,6 +51,15 @@ func TidyUpLyrics(s string) string {
 	f = strings.Replace(f, ":", "", -1)
 	f = strings.Replace(f, ";", "", -1)
 	f = strings.Replace(f, "-", "", -1)
+	f = strings.Replace(f, "_", "", -1)
+	f = strings.Replace(f, "/", "", -1)
+	f = strings.Replace(f, "\"", "", -1)
+	f = strings.Replace(f, "'", "", -1)
+	f = strings.Replace(f, "\n", " ", -1)
+	f = strings.Replace(f, "\n", " ", -1)
+	f = strings.Replace(f, "\n", " ", -1)
+	f = strings.Replace(f, "\t", " ", -1)
+
 	f = strings.ToLower(f)
 	return f
 }
