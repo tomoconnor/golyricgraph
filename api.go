@@ -22,6 +22,47 @@ type GraphResponse struct {
 	PNGFilename string `json:"png_filename"`
 	SVGFilename string `json:"svg_filename"`
 }
+type AcceptLyricsRequest struct {
+	Artist string `json:"artist"`
+	Title  string `json:"title"`
+	Lyrics string `json:"lyrics"`
+}
+
+func AcceptLyrics(db *gorm.DB) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		a := AcceptLyricsRequest{}
+		filename := uuid.New().String()
+
+		if err := c.Bind(&a); err != nil {
+			log.Println("Error binding request")
+			return err
+		}
+
+		LyricGenerator := Lyrics{
+			Artist: a.Artist,
+			Title:  a.Title,
+			Lyrics: a.Lyrics,
+		}
+		LyricGenerator.GetLyricsAsArray()
+		LyricGenerator.GetWordMap()
+		LyricGenerator.CreateLyricGraph(filename)
+		graphResponse := GraphResponse{
+			Artist:      a.Artist,
+			Title:       a.Title,
+			PNGFilename: filename + ".png",
+			SVGFilename: filename + ".svg",
+		}
+		dbo := LyricGraph{
+			Artist:   a.Artist,
+			Title:    a.Title,
+			Filename: filename + ".png",
+		}
+
+		db.Create(&dbo)
+		return c.JSON(200, graphResponse)
+
+	}
+}
 
 func GraphLyrics(db *gorm.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -94,6 +135,7 @@ func StartServer(db *gorm.DB) {
 	e.POST("/api/v1/graph", GraphLyrics(db))
 	e.POST("/api/v1/compare", CompareLyrics(db))
 	e.GET("/api/v1/retrieve", GetGraph(db))
+	e.POST("/api/v1/accept", AcceptLyrics(db))
 
 	e.Logger.Fatal(e.Start(":" + httpPort))
 
