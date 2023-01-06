@@ -160,11 +160,15 @@ func (l *Lyrics) CreateLyricGraph(filename string) {
 	}
 
 	l.LyricGraph = g
-	imageFileName := fmt.Sprintf("imagefiles/%s.png", filename)
+	imageFileName := fmt.Sprintf("/srv/images/imagefiles/%s.png", filename)
 	if err := g.RenderFilename(graph, graphviz.PNG, imageFileName); err != nil {
 		log.Fatal(err)
 	}
-	dotFileName := fmt.Sprintf("dotfiles/%s.dot", filename)
+	svgFileName := fmt.Sprintf("/srv/images/imagefiles/%s.svg", filename)
+	if err := g.RenderFilename(graph, graphviz.SVG, svgFileName); err != nil {
+		log.Fatal(err)
+	}
+	dotFileName := fmt.Sprintf("/srv/images/dotfiles/%s.dot", filename)
 	if err := g.RenderFilename(graph, graphviz.XDOT, dotFileName); err != nil {
 		log.Fatal(err)
 	}

@@ -1,25 +1,37 @@
 version: '3.7'
 services:
-  # web:
-  #   image: nginx:latest
-  #   ports:
-  #     - 80:80
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   depends_on:
-  #     - app
+  web:
+    restart: unless-stopped
+    image: nginx:latest
+    ports:
+      - 8072:8072
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - images:/srv/images
+    depends_on:
+      - app
   app:
+    restart: unless-stopped
     image: devopstom/lyricgraph:latest
     ports:
       - 8070:8070
     environment:
       HTTP_PORT: 8070
       DATABASE_URL: "host=db user=${DB_USERNAME} password=${DB_PASSWORD} dbname=${DB_NAME} port=5432 sslmode=disable TimeZone=Europe/London"
+    volumes:
+      - images:/srv/images
+    depends_on:
+      - db
   db:
+    restart: unless-stopped
     image: postgres:latest
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_DB: ${DB_NAME}
+
+volumes:
+  db:
+  images:

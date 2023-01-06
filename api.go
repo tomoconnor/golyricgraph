@@ -17,9 +17,10 @@ type GraphRequest struct {
 }
 
 type GraphResponse struct {
-	Artist   string `json:"artist"`
-	Title    string `json:"title"`
-	Filename string `json:"filename"`
+	Artist      string `json:"artist"`
+	Title       string `json:"title"`
+	PNGFilename string `json:"png_filename"`
+	SVGFilename string `json:"svg_filename"`
 }
 
 func GraphLyrics(db *gorm.DB) echo.HandlerFunc {
@@ -49,9 +50,10 @@ func GraphLyrics(db *gorm.DB) echo.HandlerFunc {
 		LyricGenerator.CreateLyricGraph(filename)
 
 		graphResponse := GraphResponse{
-			Artist:   graphRequest.Artist,
-			Title:    graphRequest.Title,
-			Filename: filename + ".png",
+			Artist:      graphRequest.Artist,
+			Title:       graphRequest.Title,
+			PNGFilename: filename + ".png",
+			SVGFilename: filename + ".svg",
 		}
 		dbo := LyricGraph{
 			Artist:   graphRequest.Artist,

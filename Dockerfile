@@ -10,7 +10,7 @@ RUN mkdir imagefiles
 FROM ubuntu:latest
 WORKDIR /srv
 COPY --from=builder /go/src/github.com/tomoconnor/golyricgraph/lyricgraph-server /srv
-RUN mkdir /srv/dotfiles
-RUN mkdir /srv/imagefiles
+RUN mkdir -p /srv/images/dotfiles
+RUN mkdir -p /srv/images/imagefiles
 
 CMD [ "./lyricgraph-server", "-server" ]
